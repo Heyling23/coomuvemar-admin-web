@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UsersResource\Pages;
 use App\Models\User;
+use Filament\Facades\Filament;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -21,6 +23,11 @@ class UsersResource extends Resource
 
     protected static ?string $navigationLabel = 'Gestión de usuarios';
 
+    public static function canAccess(): bool
+    {
+        return Filament::auth()->user()->rol === 'Administrador';
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -33,9 +40,24 @@ class UsersResource extends Resource
                     ->label('Correo electrónico')
                     ->required(),
 
+                TextInput::make('codigo')
+                    ->label('Codigo')
+                    ->required(),
+
+                TextInput::make('numero_cedula')
+                    ->label('Numero de Cedula')
+                    ->required(),
+
                 TextInput::make('password')
                     ->label('Contraseña')
+                    ->type('password')
                     ->required(),
+
+                Select::make('rol')
+                    ->options([
+                        'Administrador' => 'Administrador',
+                        'Usuario' => 'Usuario',
+                    ])
             ]);
     }
 
@@ -48,8 +70,23 @@ class UsersResource extends Resource
                     ->weight('medium')
                     ->alignLeft(),
 
+                TextColumn::make('codigo')
+                    ->label('Codigo')
+                    ->weight('medium')
+                    ->alignLeft(),
+
+                TextColumn::make('numero_cedula')
+                    ->label('Numero de Cedula')
+                    ->weight('medium')
+                    ->alignLeft(),
+
                 TextColumn::make('email')
                     ->label('Correo electrónico')
+                    ->weight('medium')
+                    ->alignLeft(),
+
+                TextColumn::make('rol')
+                    ->label('Rol')
                     ->weight('medium')
                     ->alignLeft(),
             ])

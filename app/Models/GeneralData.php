@@ -38,7 +38,9 @@ class GeneralData extends Model
 
     public function getRows(): array
     {
-        $generalData = Http::get(BaseURL::$BASE_URL . "general-data/1")->json();
+        $userId = request()->user()['id'];
+
+        $generalData = Http::get(BaseURL::$BASE_URL . "general-data/" . $userId)->json();
 
         try {
             return Arr::map($generalData['data'], function ($item) {

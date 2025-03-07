@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "bezhansalleh/filament-shield": "^3.3",
         "calebporzio/sushi": "^2.4",
         "codeat3/blade-eos-icons": "^1.14",
         "filament/filament": "^3.2",

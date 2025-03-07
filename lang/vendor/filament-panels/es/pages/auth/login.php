@@ -9,8 +9,8 @@ return [
     'actions' => [
 
         'register' => [
-            'before' => 'o',
-            'label' => 'Abrir una cuenta',
+            'before' => '',
+            'label' => '',
         ],
 
         'request_password_reset' => [

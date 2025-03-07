@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\GeneralDataResource\Pages;
 use App\Models\GeneralData;
+use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
@@ -31,14 +33,20 @@ class GeneralDataResource extends Resource
             ->schema([
                 TextInput::make('nombre_productor')
                     ->label('Nombre del productor')
+                    ->default(request()->user()['name'])
+                    ->readOnly()
                     ->required(),
 
                 TextInput::make('codigo')
                     ->label('Codigo')
+                    ->default(request()->user()['codigo'])
+                    ->readOnly()
                     ->required(),
 
                 TextInput::make('numero_cedula')
                     ->label('Cédula')
+                    ->default(request()->user()['numero_cedula'])
+                    ->readOnly()
                     ->required(),
 
                 TextInput::make('nombre_finca')

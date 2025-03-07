@@ -4,13 +4,13 @@ return [
 
     'title' => 'Login',
 
-    'heading' => 'Sign in',
+    'heading' => '',
 
     'actions' => [
 
         'register' => [
-            'before' => 'or',
-            'label' => 'sign up for an account',
+            'before' => '',
+            'label' => '',
         ],
 
         'request_password_reset' => [
