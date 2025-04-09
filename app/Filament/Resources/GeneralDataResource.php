@@ -2,20 +2,32 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\GeneralDataExporter;
 use App\Filament\Resources\GeneralDataResource\Pages;
+use App\Models\BaseURL;
 use App\Models\GeneralData;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Exception;
 use Filament\Actions\Action;
+use Filament\Actions\Exports\Enums\ExportFormat;
+use Filament\Actions\Exports\Models\Export;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\HtmlString;
+use Termwind\Enums\Color;
 
 class GeneralDataResource extends Resource
 {
@@ -92,9 +104,6 @@ class GeneralDataResource extends Resource
                     ->label('Variedades de Cacao')
                     ->required(),
 
-                Checkbox::make('es_certificado')
-                    ->label('Certificado'),
-
                 FileUpload::make('bosquejo_finca')
                     ->label('Seleccione el bosquejo de la finca')
                     ->disk('public')
@@ -158,12 +167,47 @@ class GeneralDataResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->label('Editar'),
+
+                Tables\Actions\Action::make('edit')
+                    ->icon(fn(GeneralData $record) => ($record->es_certificado) ? 'heroicon-s-x-circle' : 'heroicon-s-check-circle')
+                    ->color(Color::GREEN_900)
+                    ->label(fn(GeneralData $record) => ($record->es_certificado) ? "Desaprobar" : "Aprobar")
+                    ->action(function (GeneralData $record) {
+                        $record->es_certificado = !$record->es_certificado;
+                        $url = BaseURL::$BASE_URL . "general-data/update/" . $record->id;
+                        $response = Http::put(
+                            url: $url,
+                            data: $record->getAttributes()
+                        )->json();
+                        if ($response['status'] === false) {
+                            Notification::make()
+                                ->title("Failed to update record: " . $response['message'])
+                                ->danger()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title("Estado actualizado")
+                                ->success()
+                                ->send();
+                        }
+                        $record->save();
+                    })
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
-                        ->label('Eliminar seleccionados'),
-                ])->label('Acciones masivas'),
+
+                    Tables\Actions\BulkAction::make('Export')
+                        ->icon('heroicon-m-arrow-down-tray')
+                        ->openUrlInNewTab()
+                        ->deselectRecordsAfterCompletion()
+                        ->action(function (Collection $records) {
+                            return response()->streamDownload(function () use ($records) {
+                                echo Pdf::loadHTML(
+                                    Blade::render('pdf', ['records' => $records])
+                                )->stream();
+                            }, 'datos-generales.pdf');
+                        }),
+                ])->label('Acciones'),
             ]);
     }
 
