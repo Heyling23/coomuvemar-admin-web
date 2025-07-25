@@ -35,7 +35,13 @@ class TemporaryPermanentWorkersResource extends Resource
                     ->required(),
 
                 TextInput::make('cedula')
-                    ->required(),
+                    ->label('Cédula')
+                    ->required()
+                    ->rule('regex:/^\d{3}-\d{6}-\d{4}[A-Z]$/')
+                    ->validationMessages([
+                        'regex' => 'El formato de la cédula debe ser (ejemplo: 123-456789-12345B)',
+                        'required' => 'El campo cédula es obligatorio.',
+                    ]),
 
                 Checkbox::make('es_temporal')
                     ->label('Es temporal'),

@@ -12,8 +12,14 @@ class EditUsers extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [
-            Actions\DeleteAction::make(),
-        ];
+        $rol = $this->record["rol"];
+        echo $rol;
+        if ($rol === 'Administrador') {
+            return [];
+        } else {
+            return [
+                Actions\DeleteAction::make(),
+            ];
+        }
     }
 }

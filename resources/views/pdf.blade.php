@@ -1,4 +1,9 @@
-@php use Carbon\Carbon; @endphp
+@php
+    use Carbon\Carbon;
+    $total = $records->count();
+    $certificados = $records->where('es_certificado', true)->count();
+    $noCertificados = $records->where('es_certificado', false)->count();
+@endphp
     <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,10 +11,18 @@
     <title>Listado de Productores</title>
     <style>
         body {
-            font-family: DejaVu Sans, sans-serif; /* Asegura compatibilidad con dompdf */
+            font-family: DejaVu Sans, sans-serif;
             font-size: 12px;
             color: #333;
             margin: 20px;
+        }
+
+        .summary {
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+        .summary strong {
+            color: #2d3748;
         }
 
         table {
@@ -57,6 +70,12 @@
 
 <h1>Listado de Productores</h1>
 
+<div class="summary">
+    <strong>Total de registros:</strong> {{ $total }}<br>
+    <strong>Certificados:</strong> {{ $certificados }}<br>
+    <strong>No certificados:</strong> {{ $noCertificados }}
+</div>
+
 <table>
     <thead>
     <tr>
@@ -87,7 +106,7 @@
 </table>
 
 <div class="footer">
-    Generado el {{ Carbon::now()->format('d/m/Y') }}
+    Generado el {{ Carbon::now()->format('d/m/Y H:i') }}
 </div>
 
 </body>

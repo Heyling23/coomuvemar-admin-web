@@ -2,16 +2,10 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Exports\GeneralDataExporter;
 use App\Filament\Resources\GeneralDataResource\Pages;
 use App\Models\BaseURL;
 use App\Models\GeneralData;
-use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Exception;
-use Filament\Actions\Action;
-use Filament\Actions\Exports\Enums\ExportFormat;
-use Filament\Actions\Exports\Models\Export;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
@@ -20,9 +14,10 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Http;
@@ -78,6 +73,7 @@ class GeneralDataResource extends Resource
 
                 TextInput::make('area_total_finca')
                     ->label('Área total de la finca')
+                    ->numeric()
                     ->required(),
 
                 TextInput::make('departamento')
@@ -91,18 +87,30 @@ class GeneralDataResource extends Resource
 
                 TextInput::make('area_cacao')
                     ->label('Área del cacao')
-                    ->required(),
+                    ->required()
+                    ->numeric()
+                    ->lt('area_total_finca')
+                    ->validationMessages([
+                        'lt' => 'Área del cacao no puede ser mayor al Área total de la finca',
+                    ]),
 
                 TextInput::make('produccion')
                     ->label('Producción')
                     ->required(),
 
                 TextInput::make('desarrollo')
+                    ->lt('produccion')
+                    ->validationMessages([
+                        'lt' => 'El desarrollo no puede ser mayor a la producción',
+                    ])
                     ->required(),
 
                 TextInput::make('variedades_cacao')
                     ->label('Variedades de Cacao')
                     ->required(),
+
+                Checkbox::make('es_certificado')
+                    ->hidden(true),
 
                 FileUpload::make('bosquejo_finca')
                     ->label('Seleccione el bosquejo de la finca')
@@ -162,7 +170,42 @@ class GeneralDataResource extends Resource
                     ->alignLeft(),
             ])
             ->filters([
-                //
+                Filter::make('certificados')
+                    ->label('Fincas con certificaciones')
+                    ->query(fn (Builder $query): Builder => $query->where('es_certificado', true)),
+
+                Filter::make('no_certificado')
+                    ->label('Fincas sin certificaciones')
+                    ->query(fn (Builder $query): Builder => $query->where('es_certificado', false)),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('exportar_certificados')
+                    ->label('Exportar con certificaciones')
+                    ->icon('heroicon-m-arrow-down-tray')
+                    ->openUrlInNewTab()
+                    ->action(function () {
+                        $certificados = GeneralData::where('es_certificado', true)->get();
+
+                        return response()->streamDownload(function () use ($certificados) {
+                            echo Pdf::loadHTML(
+                                Blade::render('pdf', ['records' => $certificados])
+                            )->stream();
+                        }, 'certificados.pdf');
+                    }),
+
+                Tables\Actions\Action::make('exportar_no_certificados')
+                    ->label('Exportar sin certificaciones')
+                    ->icon('heroicon-m-arrow-down-tray')
+                    ->openUrlInNewTab()
+                    ->action(function () {
+                        $certificados = GeneralData::where('es_certificado', false)->get();
+
+                        return response()->streamDownload(function () use ($certificados) {
+                            echo Pdf::loadHTML(
+                                Blade::render('pdf', ['records' => $certificados])
+                            )->stream();
+                        }, 'no-certificados.pdf');
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
@@ -174,10 +217,10 @@ class GeneralDataResource extends Resource
                     ->label(fn(GeneralData $record) => ($record->es_certificado) ? "Desaprobar" : "Aprobar")
                     ->action(function (GeneralData $record) {
                         $record->es_certificado = !$record->es_certificado;
-                        $url = BaseURL::$BASE_URL . "general-data/update/" . $record->id;
+                        $url = BaseURL::$BASE_URL . "general-data/change-certification-status/" . $record->id;
                         $response = Http::put(
                             url: $url,
-                            data: $record->getAttributes()
+                            data: $record->getAttributes()['es_certificado'] ? ['es_certificado' => true] : ['es_certificado' => false]
                         )->json();
                         if ($response['status'] === false) {
                             Notification::make()
@@ -195,8 +238,7 @@ class GeneralDataResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-
-                    Tables\Actions\BulkAction::make('Export')
+                    Tables\Actions\BulkAction::make('Exportar seleccionados')
                         ->icon('heroicon-m-arrow-down-tray')
                         ->openUrlInNewTab()
                         ->deselectRecordsAfterCompletion()

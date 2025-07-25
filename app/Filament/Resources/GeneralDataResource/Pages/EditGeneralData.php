@@ -26,6 +26,7 @@ class EditGeneralData extends EditRecord
      */
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
+        $data['es_certificado'] = array_key_exists('es_certificado', $data) && $data['es_certificado'];
         $url = BaseURL::$BASE_URL . "general-data/update/" . $record->id;
         $response = Http::put(
             url: $url,
