@@ -39,7 +39,7 @@ class TemporaryPermanentWorkersResource extends Resource
                     ->required()
                     ->rule('regex:/^\d{3}-\d{6}-\d{4}[A-Z]$/')
                     ->validationMessages([
-                        'regex' => 'El formato de la cédula debe ser (ejemplo: 123-456789-12345B)',
+                        'regex' => 'El formato de la cédula debe ser (ejemplo: 123-456789-1234B)',
                         'required' => 'El campo cédula es obligatorio.',
                     ]),
 

@@ -6,6 +6,7 @@ use App\Filament\Resources\GeneralDataResource\Pages;
 use App\Models\BaseURL;
 use App\Models\GeneralData;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
@@ -178,35 +179,9 @@ class GeneralDataResource extends Resource
                     ->label('Fincas sin certificaciones')
                     ->query(fn (Builder $query): Builder => $query->where('es_certificado', false)),
             ])
-            ->headerActions([
-                Tables\Actions\Action::make('exportar_certificados')
-                    ->label('Exportar con certificaciones')
-                    ->icon('heroicon-m-arrow-down-tray')
-                    ->openUrlInNewTab()
-                    ->action(function () {
-                        $certificados = GeneralData::where('es_certificado', true)->get();
-
-                        return response()->streamDownload(function () use ($certificados) {
-                            echo Pdf::loadHTML(
-                                Blade::render('pdf', ['records' => $certificados])
-                            )->stream();
-                        }, 'certificados.pdf');
-                    }),
-
-                Tables\Actions\Action::make('exportar_no_certificados')
-                    ->label('Exportar sin certificaciones')
-                    ->icon('heroicon-m-arrow-down-tray')
-                    ->openUrlInNewTab()
-                    ->action(function () {
-                        $certificados = GeneralData::where('es_certificado', false)->get();
-
-                        return response()->streamDownload(function () use ($certificados) {
-                            echo Pdf::loadHTML(
-                                Blade::render('pdf', ['records' => $certificados])
-                            )->stream();
-                        }, 'no-certificados.pdf');
-                    }),
-            ])
+            ->headerActions(
+                self::getHeaderActions()
+            )
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->label('Editar'),
@@ -241,6 +216,7 @@ class GeneralDataResource extends Resource
                     Tables\Actions\BulkAction::make('Exportar seleccionados')
                         ->icon('heroicon-m-arrow-down-tray')
                         ->openUrlInNewTab()
+                        ->hidden(Filament::auth()->user()->rol !== 'Administrador')
                         ->deselectRecordsAfterCompletion()
                         ->action(function (Collection $records) {
                             return response()->streamDownload(function () use ($records) {
@@ -251,6 +227,43 @@ class GeneralDataResource extends Resource
                         }),
                 ])->label('Acciones'),
             ]);
+    }
+
+    private static function getHeaderActions(): array
+    {
+        if (Filament::auth()->user()->rol === 'Administrador') {
+            return [
+                Tables\Actions\Action::make('exportar_certificados')
+                    ->label('Exportar con certificaciones')
+                    ->icon('heroicon-m-arrow-down-tray')
+                    ->openUrlInNewTab()
+                    ->action(function () {
+                        $certificados = GeneralData::where('es_certificado', true)->get();
+
+                        return response()->streamDownload(function () use ($certificados) {
+                            echo Pdf::loadHTML(
+                                Blade::render('pdf', ['records' => $certificados])
+                            )->stream();
+                        }, 'certificados.pdf');
+                    }),
+
+                Tables\Actions\Action::make('exportar_no_certificados')
+                    ->label('Exportar sin certificaciones')
+                    ->icon('heroicon-m-arrow-down-tray')
+                    ->openUrlInNewTab()
+                    ->action(function () {
+                        $certificados = GeneralData::where('es_certificado', false)->get();
+
+                        return response()->streamDownload(function () use ($certificados) {
+                            echo Pdf::loadHTML(
+                                Blade::render('pdf', ['records' => $certificados])
+                            )->stream();
+                        }, 'no-certificados.pdf');
+                    }),
+            ];
+        } else {
+            return [];
+        }
     }
 
     public static function getRelations(): array

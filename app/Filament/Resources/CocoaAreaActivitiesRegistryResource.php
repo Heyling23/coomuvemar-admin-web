@@ -42,9 +42,9 @@ class CocoaAreaActivitiesRegistryResource extends Resource
                 TextInput::make('cedula')
                     ->label('Cédula')
                     ->required()
-                    ->rule('regex:/^\d{3}-\d{6}-\d{5}[A-Z]$/')
+                    ->rule('regex:/^\d{3}-\d{6}-\d{4}[A-Z]$/')
                     ->validationMessages([
-                        'regex' => 'El formato de la cédula debe ser 361-180700-1000A (ejemplo: 123-456789-12345B)',
+                        'regex' => 'El formato de la cédula debe ser 361-180700-1000A (ejemplo: 123-456789-1234B)',
                         'required' => 'El campo cédula es obligatorio.',
                     ]),
 
