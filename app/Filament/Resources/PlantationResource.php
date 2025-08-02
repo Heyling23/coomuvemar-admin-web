@@ -52,8 +52,7 @@ class PlantationResource extends Resource
                         'Hibrida Adulta' => 'Hibrida Adulta',
                         'Policlonal' => 'Policlonal',
                         'Hibridas de desarrollo' => 'Hibridas de desarrollo',
-                    ])
-                    ->required(),
+                    ]),
             ]);
     }
 
