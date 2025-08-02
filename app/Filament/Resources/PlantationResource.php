@@ -46,8 +46,13 @@ class PlantationResource extends Resource
                     ->label('Area podada (mz)')
                     ->required(),
 
-                TextInput::make('tipo_plantacion')
+                Select::make('tipo_plantacion')
                     ->label('Tipo de plantacion')
+                    ->options([
+                        'Hibrida Adulta' => 'Hibrida Adulta',
+                        'Policlonal' => 'Policlonal',
+                        'Hibridas de desarrollo' => 'Hibridas de desarrollo',
+                    ])
                     ->required(),
             ]);
     }
